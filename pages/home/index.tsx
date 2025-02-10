@@ -38,8 +38,9 @@ import { FaPlay, FaStop, FaPlus, FaMoon, FaSun, FaInfoCircle, FaUser, FaSignOutA
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStopwatch, useTimer } from 'react-timer-hook';
 import { getUser } from '../api/auth';
-import { addEvent, addTimer, getEvents, getTimers } from '../api/events';
+import { addEvent, addTimer, deleteEvent, deleteTimer, getEvents, getTimers, putTimer } from '../api/events';
 import { BsThreeDotsVertical } from "react-icons/bs";
+import { title } from 'process';
 
 const MotionBox = motion(Box);
 const MotionCard = motion(Card);
@@ -81,6 +82,7 @@ export default function FuturisticTracker() {
   const [now, setNow] = useState(new Date());
   const [runningStatus, setRunningStatus] = useState(false)
   const [userData, setUserData] = useState({})
+  const [interimId, setInterimId] = useState('')
 
 
   const {
@@ -108,7 +110,8 @@ export default function FuturisticTracker() {
 
     if (runningStatus) {
       setRecords([...records, { title: timerTitle, duration: totalSeconds, created_at: new Date().toLocaleString() }]);
-      addTimer(timerTitle,totalSeconds).then((res)=>{
+
+      putTimer(timerTitle,totalSeconds,interimId).then((res)=>{
         console.log(res)
       })
       reset()
@@ -116,8 +119,13 @@ export default function FuturisticTracker() {
       setTimerTitle('')
     } else {
       start();
+      addTimer(timerTitle,0).then((res)=>{
+        console.log(res)
+        setInterimId(res.uuid)
+      })
     }
   };
+  
 
   const handleAddCountdown = () => {
     if (!eventTitle || !eventDateTime) return;
@@ -133,6 +141,9 @@ export default function FuturisticTracker() {
     setQoutes(timeQuotes[Math.floor(Math.random() *20)])
     getUser().then((res)=>{
       setUserData(res)
+    }).catch((err)=>{
+      toast({title:'Please Login Again' , status: 'error', duration:3000})
+      window.location.href='/auth'
     })
     getEvents().then((res)=>{
       console.log(res)
@@ -179,7 +190,7 @@ export default function FuturisticTracker() {
     if (hour < 18) return 'Good afternoon';
     return 'Good evening';
   };
-  function CountdownTimer({ title, targetDate }) {
+  function CountdownTimer({ title, targetDate,uuid }) {
     const time = new Date(targetDate);
 
     const {
@@ -212,10 +223,18 @@ export default function FuturisticTracker() {
             _active={{ bg: "whiteAlpha.400" }}
           />
           <MenuList bg="purple.900" borderColor="purple.700">
-            <MenuItem _hover={{ bg: "purple.700" }} bg={''} color={'white'} onClick={() => handleUpdate(record)}>
+            <MenuItem _hover={{ bg: "purple.700" }} bg={''} color={'white'} onClick={() =>
+              {}
+            }>
               Update
             </MenuItem>
-            <MenuItem _hover={{ bg: "red.600", color: "white" }} bg={''} color={'white'} onClick={() => handleDelete(record.id)}>
+            <MenuItem _hover={{ bg: "red.600", color: "white" }} bg={''} color={'white'} onClick={() => deleteEvent(uuid).then((res)=>{
+              getEvents().then((res)=>{
+                console.log(res)
+                setCountdowns(res)
+              })
+              toast({title:'Event deleted successfully', status:'error', duration:3000})
+            })}>
               Delete
             </MenuItem>
           </MenuList>
@@ -253,7 +272,7 @@ export default function FuturisticTracker() {
       >
         <VStack spacing={2}>
           <Text fontSize="xl" fontWeight="bold">
-            {getGreeting()}, {userData.name || 'Guest'}! ⏳
+            {getGreeting()}, {userData?.name || 'Guest'}! ⏳
           </Text>
           <Text fontSize="md" fontStyle="italic">
             {qoutes}
@@ -272,7 +291,7 @@ export default function FuturisticTracker() {
           <Button leftIcon={<FaInfoCircle />} variant="ghost" colorScheme="white">About Us</Button>
           <Menu>
             <MenuButton as={Button} rightIcon={<FaAngleDown />} variant="outline" colorScheme="white">
-              <HStack><Avatar name={userData.name} size="sm" /><Text>{userData.name}</Text></HStack>
+              <HStack><Avatar name={userData?.name} size="sm" /><Text>{userData?.name}</Text></HStack>
             </MenuButton>
             <MenuList><MenuItem icon={<FaSignOutAlt />} color="white" bg="purple.400" onClick={logOut}>Logout</MenuItem></MenuList>
           </Menu>
@@ -282,7 +301,7 @@ export default function FuturisticTracker() {
       <Container maxW="container.md">
         <VStack spacing={6} align="center">
           <Flex justify="space-between" width="full">
-            <TimeQuote username={userData.name} />
+            <TimeQuote username={userData?.name} />
           </Flex>
           <Tabs variant="soft-rounded" colorScheme="purple" width="full">
             <TabList>
@@ -310,7 +329,7 @@ export default function FuturisticTracker() {
                         </Box>
                         <HStack hidden={!runningStatus}><Button onClick={() => pause()}>Pause</Button><Button onClick={() => reset()}>Reset</Button></HStack>
                       </VStack>
-                      {records.length > 0 && (
+                      {records && records.length > 0 && (
                         <>
                           <Divider />
                           <AnimatePresence>
@@ -342,10 +361,16 @@ export default function FuturisticTracker() {
             _active={{ bg: "whiteAlpha.400" }}
           />
           <MenuList bg="purple.900" borderColor="purple.700">
-            <MenuItem _hover={{ bg: "purple.700" }} bg={''} color={'white'} onClick={() => handleUpdate(record)}>
+            <MenuItem _hover={{ bg: "purple.700" }} bg={''} color={'white'} onClick={() => {}}>
               Update
             </MenuItem>
-            <MenuItem _hover={{ bg: "red.600", color: "white" }} bg={''} color={'white'} onClick={() => handleDelete(record.id)}>
+            <MenuItem _hover={{ bg: "red.600", color: "white" }} bg={''} color={'white'} onClick={() => deleteTimer(record.uuid).then((res)=>{
+              toast({title:'Timer deleted successfully', status:'error', duration:3000})
+              getTimers().then((res)=>{
+                console.log(res)
+                setRecords(res)
+              })
+            })}>
               Delete
             </MenuItem>
           </MenuList>
@@ -377,12 +402,12 @@ export default function FuturisticTracker() {
                       <Input placeholder="Enter event title" value={eventTitle} onChange={(e) => setEventTitle(e.target.value)} />
                       <Input type="datetime-local" value={eventDateTime} onChange={(e) => setEventDateTime(e.target.value)} />
                       <Button leftIcon={<FaPlus />} colorScheme="purple" onClick={handleAddCountdown}>Add Event</Button>
-                      {countdowns.length > 0 && (
+                      {countdowns && countdowns.length > 0 && (
                         <>
                           <Divider my={4} />
                           <Grid gap={6}>
                             {countdowns.map((event, index) => (
-                              <CountdownTimer key={index} title={event.title} targetDate={event.target_date} />
+                              <CountdownTimer key={index} title={event.title} targetDate={event.target_date} uuid={event.uuid} />
                             ))}
                           </Grid>
                         </>

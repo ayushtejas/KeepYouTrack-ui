@@ -1,12 +1,16 @@
 import { api, getToken } from'./base'
 
 export const RegisterUser = async(email:String,password:String,name:String) =>{
+    try{
     const res = await api.post('/user/create/',{
         email,
         password,
         name
     })
-    return res.data
+    return res.data}
+    catch{
+        return;
+    }
 }
 
 export const LoginUser = async(email:String,password:String) =>{
@@ -27,4 +31,5 @@ export const getUser = async() =>{
         }
     )
     return res.data
+
 }

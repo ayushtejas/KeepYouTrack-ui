@@ -168,7 +168,7 @@ export default function AuthPage() {
                     />
                     <InputRightElement width='4.5rem'>
                       <Button mt={2} size='sm' onClick={handleClick2}>
-                        {show ? 'Hide' : 'Show'}
+                        {show2 ? 'Hide' : 'Show'}
                       </Button>
                     </InputRightElement>
                   </InputGroup>
