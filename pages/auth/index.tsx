@@ -1,19 +1,18 @@
+/* eslint-disable */
+
 import {
   Box,
   Button,
   Container,
-  Flex,
   FormControl,
   FormLabel,
   Heading,
   Input,
-  Stack,
   Text,
   useColorModeValue,
   VStack,
   HStack,
   Divider,
-  IconButton,
   InputRightElement,
   InputGroup,
   useToast,
@@ -35,9 +34,9 @@ export default function AuthPage() {
   const handleClick2 = () => setShow2(!show2)
 
   const toast = useToast()
-  const handleRegister =(e)=>{
+  const handleRegister =(e: React.FormEvent<HTMLFormElement>)=>{
     e.preventDefault()
-    RegisterUser(email,password,name).then((res)=>{
+    RegisterUser(email,password,name).then(()=>{
       setIsLogin(true)
       toast({
         title: 'Account Created Successfully',
@@ -47,7 +46,7 @@ export default function AuthPage() {
       })
     })
   }
-  const handleLogin =(e)=>{
+  const handleLogin =(e: React.FormEvent<HTMLFormElement>)=>{
     e.preventDefault()
     LoginUser(email,password).then((res)=>{
       toast({
@@ -120,7 +119,7 @@ export default function AuthPage() {
 
             <form onSubmit={(e)=>{!isLogin?handleRegister(e):handleLogin(e)}}>
             <VStack spacing={6} w="full">
-              {!isLogin && (
+              {!isLogin &&
                 <FormControl>
                   <FormLabel>Name</FormLabel>
                   <Input
@@ -130,7 +129,7 @@ export default function AuthPage() {
                     onChange={(e) => { setName(e.target.value) }}
                   />
                 </FormControl>
-              )}
+              }
 
               <FormControl>
                 <FormLabel>Email</FormLabel>

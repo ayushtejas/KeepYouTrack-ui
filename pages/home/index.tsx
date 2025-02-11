@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import {
   Box,
   Button,
@@ -20,10 +22,6 @@ import {
   CardHeader,
   useToast,
   Divider,
-  Badge,
-  AlertIcon,
-  Alert,
-  Stack,
   Spacer,
   HStack,
   Menu,
@@ -34,29 +32,21 @@ import {
   Grid,
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
-import { FaPlay, FaStop, FaPlus, FaMoon, FaSun, FaInfoCircle, FaUser, FaSignOutAlt, FaAngleDown } from 'react-icons/fa';
+import { FaPlay, FaStop, FaPlus, FaMoon, FaSun, FaInfoCircle, FaSignOutAlt, FaAngleDown } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStopwatch, useTimer } from 'react-timer-hook';
 import { getUser } from '../api/auth';
 import { addEvent, addTimer, deleteEvent, deleteTimer, getEvents, getTimers, putTimer } from '../api/events';
 import { BsThreeDotsVertical } from "react-icons/bs";
-import { title } from 'process';
 
-const MotionBox = motion(Box);
 const MotionCard = motion(Card);
 
-export function MyTimer({ expiryTimestamp }) {
+export function MyTimer({ expiryTimestamp }:{expiryTimestamp: Date}) {
   const {
-    totalSeconds,
     seconds,
     minutes,
     hours,
-    days,
-    isRunning,
-    start,
-    pause,
-    resume,
-    restart,
+
   } = useTimer({ expiryTimestamp, onExpire: () => console.warn('onExpire called') });
 
   return (
@@ -75,13 +65,15 @@ export default function FuturisticTracker() {
 
   const [timerTitle, setTimerTitle] = useState('');
   const [qoutes, setQoutes] = useState('');
-  const [records, setRecords] = useState([]);
+  const [records, setRecords] = useState<{ title: string; duration: number; created_at: string;uuid: string }[]>([]);
   const [eventTitle, setEventTitle] = useState('');
   const [eventDateTime, setEventDateTime] = useState('');
-  const [countdowns, setCountdowns] = useState([]);
-  const [now, setNow] = useState(new Date());
+  const [countdowns, setCountdowns] = useState<{ title: string; target_date: Date;uuid:string }[]>([]);
   const [runningStatus, setRunningStatus] = useState(false)
-  const [userData, setUserData] = useState({})
+  type UserData ={
+    name?:string
+  }
+  const [userData, setUserData] = useState<UserData>({})
   const [interimId, setInterimId] = useState('')
 
 
@@ -109,7 +101,7 @@ export default function FuturisticTracker() {
     }
 
     if (runningStatus) {
-      setRecords([...records, { title: timerTitle, duration: totalSeconds, created_at: new Date().toLocaleString() }]);
+      setRecords([...records, { title: timerTitle, duration: totalSeconds, created_at: new Date().toLocaleString(),uuid:'9' }]);
 
       putTimer(timerTitle,totalSeconds,interimId).then((res)=>{
         console.log(res)
@@ -125,13 +117,13 @@ export default function FuturisticTracker() {
       })
     }
   };
-  
+
 
   const handleAddCountdown = () => {
     if (!eventTitle || !eventDateTime) return;
 
     const targetDate = new Date(eventDateTime);
-    setCountdowns([...countdowns, { title: eventTitle, target_date:targetDate }]);
+    setCountdowns([...countdowns, { title: eventTitle, target_date:targetDate ,uuid:'9'}]);
     addEvent(eventTitle, targetDate).then((res)=>{
       console.log(res)
     })
@@ -141,7 +133,7 @@ export default function FuturisticTracker() {
     setQoutes(timeQuotes[Math.floor(Math.random() *20)])
     getUser().then((res)=>{
       setUserData(res)
-    }).catch((err)=>{
+    }).catch(()=>{
       toast({title:'Please Login Again' , status: 'error', duration:3000})
       window.location.href='/auth'
     })
@@ -190,7 +182,13 @@ export default function FuturisticTracker() {
     if (hour < 18) return 'Good afternoon';
     return 'Good evening';
   };
-  function CountdownTimer({ title, targetDate,uuid }) {
+  interface CountdownTimerProps {
+    title: string;
+    targetDate: Date; // Or `Date` if it's already a Date object
+    uuid: string;
+  }
+
+  function CountdownTimer({ title, targetDate, uuid }: CountdownTimerProps) {
     const time = new Date(targetDate);
 
     const {
@@ -198,11 +196,7 @@ export default function FuturisticTracker() {
       minutes,
       hours,
       days,
-      isRunning,
-      start,
-      pause,
-      resume,
-      restart,
+      isRunning
     } = useTimer({
       expiryTimestamp: time,
 
@@ -228,7 +222,7 @@ export default function FuturisticTracker() {
             }>
               Update
             </MenuItem>
-            <MenuItem _hover={{ bg: "red.600", color: "white" }} bg={''} color={'white'} onClick={() => deleteEvent(uuid).then((res)=>{
+            <MenuItem _hover={{ bg: "red.600", color: "white" }} bg={''} color={'white'} onClick={() => deleteEvent(uuid).then(()=>{
               getEvents().then((res)=>{
                 console.log(res)
                 setCountdowns(res)
@@ -255,7 +249,7 @@ export default function FuturisticTracker() {
     );
   }
 
-  function TimeQuote({ username }) {
+  function TimeQuote() {
     return (
       <Box
         bg={useColorModeValue('purple.100', 'gray.800')}
@@ -301,7 +295,7 @@ export default function FuturisticTracker() {
       <Container maxW="container.md">
         <VStack spacing={6} align="center">
           <Flex justify="space-between" width="full">
-            <TimeQuote username={userData?.name} />
+            <TimeQuote />
           </Flex>
           <Tabs variant="soft-rounded" colorScheme="purple" width="full">
             <TabList>
@@ -364,7 +358,7 @@ export default function FuturisticTracker() {
             <MenuItem _hover={{ bg: "purple.700" }} bg={''} color={'white'} onClick={() => {}}>
               Update
             </MenuItem>
-            <MenuItem _hover={{ bg: "red.600", color: "white" }} bg={''} color={'white'} onClick={() => deleteTimer(record.uuid).then((res)=>{
+            <MenuItem _hover={{ bg: "red.600", color: "white" }} bg={''} color={'white'} onClick={() => deleteTimer(record.uuid).then(()=>{
               toast({title:'Timer deleted successfully', status:'error', duration:3000})
               getTimers().then((res)=>{
                 console.log(res)

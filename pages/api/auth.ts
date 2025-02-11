@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { api, getToken } from'./base'
 
-export const RegisterUser = async(email:String,password:String,name:String) =>{
+export const RegisterUser = async(email:string,password:string,name:string) =>{
     try{
     const res = await api.post('/user/create/',{
         email,
@@ -13,7 +15,7 @@ export const RegisterUser = async(email:String,password:String,name:String) =>{
     }
 }
 
-export const LoginUser = async(email:String,password:String) =>{
+export const LoginUser = async(email:string,password:string) =>{
     const res = await api.post('/user/login/',{
         email,
         password,

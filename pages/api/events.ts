@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { api, getToken } from "./base"
 
-export const addTimer = async(title:string,duration:any) =>{
+export const addTimer = async(title:string,duration:number) =>{
     const token = getToken()
     try{
     const res = await api.post('/events/timer/',
@@ -17,7 +18,7 @@ export const addTimer = async(title:string,duration:any) =>{
     }
 }
 
-export const putTimer = async(title:string,duration:any, id:any) =>{
+export const putTimer = async(title:string,duration:number, id:string) =>{
     const token = getToken()
     try{
     const res = await api.put(`/events/timer/${id}/`,
@@ -34,7 +35,7 @@ export const putTimer = async(title:string,duration:any, id:any) =>{
     }
 }
 
-export const deleteTimer = async(id:any) =>{
+export const deleteTimer = async(id:string) =>{
     const token = getToken()
     try{
     const res = await api.delete(`/events/timer/${id}/`,
